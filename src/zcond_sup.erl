@@ -14,6 +14,8 @@
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
+%% Helper macro for declaring children of supervisor
+-define(CHILD(I), #{ id => I, start => {I, start_link, []} }).
 
 %%====================================================================
 %% API functions
@@ -28,7 +30,9 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+	{ok, { #{}, [
+		?CHILD(zcond_srv)
+	]}}.
 
 %%====================================================================
 %% Internal functions
