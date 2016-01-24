@@ -39,7 +39,7 @@ init(Args) ->
 		{broadcast, true},
 		{reuseaddr, true},
 		{multicast_ttl, 32},
-		{multicast_loop, false},
+		{multicast_loop, true},
 		{add_membership, {{239,0,0,239}, {0,0,0,0}}},
 		binary
 	]),
