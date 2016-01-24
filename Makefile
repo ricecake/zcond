@@ -1,6 +1,6 @@
 REBAR := `pwd`/rebar3
 
-all: test release
+all: test compile
 
 compile:
 	@$(REBAR) compile
@@ -14,4 +14,4 @@ clean:
 shell:
 	@$(REBAR) shell
 
-.PHONY: release test all compile clean
+.PHONY: test all compile clean shell
