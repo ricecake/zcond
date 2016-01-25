@@ -53,8 +53,8 @@ handle_cast(_Msg, State) ->
 	{noreply, State}.
 
 handle_info(tick, #{ socket := Socket } = State) ->
-	io:format("Tick~n"),
-	gen_udp:send(Socket, {239,0,0,239}, 1970, <<"butts">>),
+	Name = erlang:atom_to_binary(node()),
+	gen_udp:send(Socket, {239,0,0,239}, 1970, <<"butts", 1:8, (size(Name)):8, Name/binary>>),
 	erlang:send_after(1000, self(), tick),
 	{noreply, State};
 handle_info({udp, _Socket, IP, Port, Packet}, State) ->
