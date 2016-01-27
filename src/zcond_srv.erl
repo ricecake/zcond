@@ -43,9 +43,10 @@ init(Args) ->
 		{add_membership, {{239,0,0,239}, {0,0,0,0}}},
 		binary
 	]),
-	io:format("~p~n", [inet:socknames(Socket)]),
+	Name = erlang:atom_to_binary(node(), utf8),
+	Announce = <<"butt", 1:8, 0:8, (size(Name)):8, Name/binary>>
 	erlang:send_after(1000, self(), tick),
-	{ok, Args#{ socket => Socket }}.
+	{ok, Args#{ socket => Socket, announce => Announce }}.
 
 handle_call(_Msg, _From, State) ->
 	{reply, ok, State}.
@@ -53,10 +54,11 @@ handle_call(_Msg, _From, State) ->
 handle_cast(_Msg, State) ->
 	{noreply, State}.
 
-handle_info(tick, #{ socket := Socket } = State) ->
-	Name = erlang:atom_to_binary(node(), utf8),
-	gen_udp:send(Socket, {239,0,0,239}, 1970, <<"butt", 1:8, 0:8, (size(Name)):8, Name/binary>>),
+handle_info(tick, #{ socket := Socket, announce := Announce } = State) ->
+	gen_udp:send(Socket, {239,0,0,239}, 1970, Announce),
 	erlang:send_after(1000, self(), tick),
+	{noreply, State};
+handle_info({udp, _Socket, IP, 1970, Announce}, #{ socket := Socket, announce := Announce } = State) ->
 	{noreply, State};
 handle_info({udp, _Socket, IP, 1970, <<"butt", 1:8, 0:8, Size:8, Name:Size/binary>>}, #{ socket := Socket } = State) ->
 	io:format("GOT ~p~n", [{IP, Name}]),
