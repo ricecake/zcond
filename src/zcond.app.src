@@ -1,8 +1,8 @@
-{application, 'zcond',
+{application, zcond,
  [{description, "An OTP application"},
   {vsn, "0.1.0"},
   {registered, []},
-  {mod, {'zcond_app', []}},
+  {mod, {zcond_app, []}},
   {applications,
    [kernel,
     stdlib
