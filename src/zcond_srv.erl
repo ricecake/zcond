@@ -44,9 +44,10 @@ init(Args) ->
 		binary
 	]),
 	Name = erlang:atom_to_binary(node(), utf8),
-	Announce = <<"butt", 1:8, 0:8, (size(Name)):8, Name/binary>>,
+	Announce  = <<"butt", 1:8, 0:8, (size(Name)):8, Name/binary>>,
+	Introduce = <<"butt", 1:8, 1:8, (size(Name)):8, Name/binary>>,
 	erlang:send_after(1000, self(), tick),
-	{ok, Args#{ socket => Socket, announce => Announce }}.
+	{ok, Args#{ socket => Socket, announce => Announce, intro => Introduce }}.
 
 handle_call(_Msg, _From, State) ->
 	{reply, ok, State}.
@@ -58,14 +59,16 @@ handle_info(tick, #{ socket := Socket, announce := Announce } = State) ->
 	gen_udp:send(Socket, {239,0,0,239}, 1970, Announce),
 	erlang:send_after(1000, self(), tick),
 	{noreply, State};
+handle_info({udp, _Socket, _IP, 1970, Introduce}, #{ intro := Introduce } = State) ->
+	{noreply, State};
 handle_info({udp, _Socket, _IP, 1970, Announce}, #{ announce := Announce } = State) ->
 	{noreply, State};
-handle_info({udp, _Socket, IP, 1970, <<"butt", 1:8, 0:8, Size:8, Name:Size/binary>>}, #{ socket := Socket } = State) ->
-	io:format("GOT ~p~n", [{IP, Name}]),
-	gen_udp:send(Socket, IP, 1970, <<"butt", 1:8, 1:8, "HELLO">>),
+handle_info({udp, _Socket, IP, 1970, <<"butt", 1:8, 0:8, Size:8, Name:Size/binary>>}, #{ socket := Socket, intro := Intro } = State) ->
+	io:format("GOT anounce ~p~n", [{IP, Name}]),
+	gen_udp:send(Socket, IP, 1970, Intro),
 	{noreply, State};
-handle_info({udp, _Socket, _IP, 1970, <<"butt", 1:8, 1:8, Rest/binary>>}, State) ->
-	io:format("GOT ~s~n", [Rest]),
+handle_info({udp, _Socket, IP, 1970, <<"butt", 1:8, 1:8, Size:8, Name:Size/binary>>}, State) ->
+	io:format("GOT intro ~p~n", [{IP, Name}]),
 	{noreply, State};
 handle_info(_Info, State) ->
 	{noreply, State}.
